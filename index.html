@@ -309,6 +309,8 @@ async function search(q){
 async function llm(pool,messages){
  const errs=new Set(),sleep=ms=>new Promise(z=>setTimeout(z,ms));
  if(!pool.some(x=>getKey(x.p))){openModal();throw new Error("Добавьте бесплатный ключ API (кнопка 👤 в меню)")}
+ const now=new Date(),ds=now.toLocaleString("ru-RU",{dateStyle:"full",timeStyle:"short"});
+ messages=[{...messages[0],content:messages[0].content+"\n\nСЕГОДНЯ: "+ds+" (сейчас "+now.getFullYear()+" год). Твои обучающие данные устарели, поэтому всегда считай текущим годом "+now.getFullYear()+" и не называй более ранний год сегодняшним. Если данных о недавних событиях нет, честно скажи об этом."},...messages.slice(1)];
  let sfDead=false;
  for(const {p,m} of pool){
   const key=getKey(p);if(!key||(p==="sf"&&sfDead))continue;
@@ -368,7 +370,7 @@ async function send(){
    sys=SYS.geni+"\n\nНайденные источники:\n"+src.map((s,i)=>`[${i+1}] ${s.title}: ${s.text}`).join("\n\n");
    pool=CONFIG.pools.geni;
   }else if(S.model==="mercury"&&isComplex(text)){
-   $("#duo").classList.add("show");
+   window._d0=Date.now();$("#duo").classList.add("show");
    await new Promise(r=>setTimeout(r,900));
    src=await search(text.replace(/\n/g," ").slice(0,200));
    sys=SYS.mercury+"\nК тебе подключился помощник Geni и принёс данные из интернета. Разбей запрос на подзадачи и ответь на каждую.\n\nДанные Geni:\n"+src.map((s,i)=>`[${i+1}] ${s.title}: ${s.text}`).join("\n\n");
@@ -380,7 +382,7 @@ async function send(){
   c.msgs.push({role:"assistant",content:ans,src});
   addMsg("assistant",ans,src);
  }catch(e){t.remove();addMsg("assistant","⚠️ "+e.message)}
- busy=false;$("#duo").classList.remove("show");$("#send").disabled=false;$("#gfig").classList.remove("busy");save();
+ busy=false;setTimeout(()=>$("#duo").classList.remove("show"),Math.max(0,3000-(Date.now()-(window._d0||0))));$("#send").disabled=false;$("#gfig").classList.remove("busy");save();
 }
 function autosize(){const i=$("#in");i.style.height="auto";i.style.height=Math.min(i.scrollHeight,140)+"px"}
 function closeSide(){$("#side").classList.remove("open");$("#sh").classList.remove("open")}
